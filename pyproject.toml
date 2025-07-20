@@ -1,0 +1,20 @@
+[project]
+name = "portfind"
+version = "0.0.1"
+description = "CLI tool to find open ports in IP address."
+authors = [{ name = "Eilon H.", email = "eilonhafzadi7311@gmail.com" }]
+dependencies = ["typer"]
+requires-python = ">=3.9"
+
+[project.scripts]
+portfind = "portfinder.cli:app"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
