@@ -3,7 +3,7 @@ from .portfind import port_find
 
 
 app = typer.Typer()
-app.command()(port_find)
+app.command(name=None)(port_find)
 
 
 if __name__ == "__main__":
