@@ -1,3 +1,3 @@
 if __name__ == "__main__":
-    from greetings.cli import main
-    main()
+    from greetings.cli import app
+    app()
