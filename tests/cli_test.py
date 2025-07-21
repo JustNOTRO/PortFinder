@@ -10,12 +10,6 @@ from src.portfinder.cli import app
 runner = CliRunner()
 
 
-def test_default_address():
-    result = runner.invoke(app)
-    assert result.exit_code == 0
-    assert "Checking address: 127.0.0.1" in result.output
-
-
 def test_custom_address():
     result = runner.invoke(app, ["127.0.0.2"])
     assert result.exit_code == 0

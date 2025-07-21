@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - "**"
+  merge_group:
+
 
 jobs:
   test:

@@ -2,6 +2,7 @@ import typer
 import ipaddress
 import socket
 
+from typing import Optional
 from typing_extensions import Annotated
 from concurrent.futures import ThreadPoolExecutor
 
@@ -27,28 +28,36 @@ def is_ip_address(ip_str):
 
 
 def port_find(
-        address: Annotated[str, typer.Argument(help="IP address to scan for open ports.")] = "127.0.0.1",
-        start: Annotated[int, typer.Option(help="Starting port range.")] = LOWEST_PORT,
-        end: Annotated[int, typer.Option(help="Ending port range.")] = HIGHEST_PORT,
+    address: Optional[str] = typer.Argument(
+        None,
+        help="IP address to scan for open ports."
+    ),
+    start: int = typer.Option(0, "--start", help="Starting port range."),
+    end:   int = typer.Option(65_535, "--end",   help="Ending port range."),
 ):
+    if address is None:
+        from .cli import app
+        app(["--help"])
+        typer.Exit(1)
+
     if not is_ip_address(address):
         print(f"Invalid IP address '{address}'.")
-        exit(1)
+        typer.Exit(1)
 
-    print("Checking address:", address,"..")
+    print("_" * 60)
+    print(f"Please wait, scanning {start} - {end} ports in remote host: {address}")
+    print("_" * 60)
 
     with ThreadPoolExecutor(max_workers=500) as executor:
         results = executor.map(lambda port: scan_port(address, port), range(start, end + 1))
         open_ports = []
-        for port in results:
-            if not port:
+        for result in results:
+            if not result:
                 continue
 
-            open_ports.append(port)
-            print(f"{address} -> port {port} is open!")
+            open_ports.append(result)
+            print(f"{address} -> port {result} is open!")
 
+        executor.shutdown()
 
-    if len(open_ports) == 0:
-        print("No open ports found hooray!")
-    else:
-        print(f"Found {len(open_ports)} open ports {open_ports}.")
+    print(f"Found {format(len(open_ports))} open port(s) {open_ports}.")
