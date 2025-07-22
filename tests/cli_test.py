@@ -5,11 +5,13 @@ import pytest
 
 from typer.testing import CliRunner
 from src.portfinder.cli import app
+from src.portfinder.portfind import scan_port
 
 test_runner = CliRunner()
 
 
-def test_custom_address():
+def test_custom_address(monkeypatch):
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
     result = test_runner.invoke(app, ["127.0.0.2", "--start", "1", "--end", "1024"])
     assert result.exit_code == 0
     assert "Please wait, scanning 1 - 1024 ports in remote host: 127.0.0.2" in result.stdout
@@ -31,15 +33,12 @@ def test_no_address_shows_help_and_exits():
 def test_cmd_runs():
     original_argv = sys.argv.copy()
     try:
-        # Simulate running the CLI module directly
         sys.argv = ["src.portfinder.cli"]
 
-        # run_module will call the if __name__ == '__main__' block in cli.py
         with pytest.raises(SystemExit) as exc:
             runpy.run_module("src.portfinder.cli", run_name="__main__")
         assert exc.value.code == 0
 
-        # Test the -m invocation of the CLI module
         result = subprocess.run(
             [sys.executable, "-m", "src.portfinder.cli"],
             capture_output=True,

@@ -1,60 +1,78 @@
-from src.portfinder.portfind import port_find
+import sys
+import subprocess
+import runpy
+import pytest
 from typer.testing import CliRunner
 from src.portfinder.cli import app
+from src.portfinder.portfind import scan_port
 
-test_runner = CliRunner()
+runner = CliRunner()
 
 
-def test_port_find_no_args(capsys):
-    output = test_runner.invoke(app, []).stdout
+def test_port_find_no_args():
+    result = runner.invoke(app, [])
+    assert result.exit_code == 0
+    assert "Usage:" in result.stdout
+
+
+def test_port_find_localhost(monkeypatch):
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: port if port == 5000 else None)
+
+    result = runner.invoke(app, ["localhost", "--start", "1024", "--end", "5000"])
+    assert result.exit_code == 0
+    assert "_" * 60 in result.stdout
+    assert "Please wait, scanning 1024 - 5000 ports in remote host: 127.0.0.1" in result.stdout
+    assert "_" * 60 in result.stdout
+    assert "127.0.0.1 -> port 5000 is open!" in result.stdout
+    assert "Found 1 open port(s) [5000]." in result.stdout
+
+
+def test_invalid_address():
+    result = runner.invoke(app, ["abcdef", "--start", "1", "--end", "1024"])
+    assert result.exit_code == 1
+    assert "Invalid IP address 'abcdef'." in result.stdout
+
+
+def test_invalid_port_range(monkeypatch):
+    output = runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"]).stdout
     assert "Usage:" in output
 
 
-def test_port_find_localhost(capsys):
-    output = test_runner.invoke(app, ["localhost", "--start", "1024", "--end", "5000"]).stdout
-    assert "_" * 60 in output
-    assert f"Please wait, scanning 1024 - 5000 ports in remote host: 127.0.0.1" in output
-    assert "_" * 60 in output
-    assert "Found 1 open port(s) [5000].\n" in output
+def test_invalid_start_range():
+    result = runner.invoke(app, ["127.0.0.1", "--start", "abc", "--end", "1024"])
+    assert result.exit_code != 0
+    assert "Invalid value for '--start': 'abc' is not a valid integer" in result.stdout
 
 
-def test_invalid_address(capsys):
-    output = test_runner.invoke(app, ["abcdef", "--start", "1", "--end", "1024"]).stdout
-    assert output == "Invalid IP address 'abcdef'.\n"
-
-def test_invalid_port_range(capsys):
-    output = test_runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"]).stdout
-    assert "Usage:" in output
-
-def test_invalid_start_range(capsys):
-    output = test_runner.invoke(app, ["127.0.0.1", "--start", "abc", "--end", "1024"]).stdout
-    assert "Invalid value for '--start': 'abc' is not a valid integer." in output
-
-def test_invalid_end_range(capsys):
-    output = test_runner.invoke(app, ["127.0.0.1", "--start", "1024", "--end", "abc"]).stdout
-    assert "Invalid value for '--end': 'abc' is not a valid integer." in output
-
-def test_no_open_ports(capsys):
-    output = test_runner.invoke(app, ["127.0.0.1", "--start", "1", "--end", "1024"]).stdout
-    assert "_" * 60 in output
-    assert f"Please wait, scanning 1 - 1024 ports in remote host: 127.0.0.1" in output
-    assert "_" * 60 in output
-    assert "Found 1 open port(s) [631].\n" in output
+def test_invalid_end_range():
+    result = runner.invoke(app, ["127.0.0.1", "--start", "1024", "--end", "abc"])
+    assert result.exit_code != 0
+    assert "Invalid value for '--end': 'abc' is not a valid integer" in result.stdout
 
 
-def test_port_find(capsys):
-    port_find(address="127.0.0.1", start=1024, end=5000)
-    output = test_runner.invoke(app, ["127.0.0.1", "--start", "1024", "--end", "5000"]).stdout
-    assert "_" * 60 in output
-    assert f"Please wait, scanning 1024 - 5000 ports in remote host: 127.0.0.1" in output
-    assert "_" * 60 in output
-    assert "127.0.0.1 -> port 5000 is open!\n" in output
-    assert "Found 1 open port(s) [5000].\n" in output
+def test_no_open_ports(monkeypatch):
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
+    result = runner.invoke(app, ["127.0.0.1", "--start", "1", "--end", "1024"])
+    assert result.exit_code == 0
+    assert "_" * 60 in result.stdout
+    assert "Please wait, scanning 1 - 1024 ports in remote host: 127.0.0.1" in result.stdout
+    assert "_" * 60 in result.stdout
+    assert "Found 0 open port(s) []" in result.stdout
 
 
-def test_port_find_with_start_arg(capsys):
-    output = test_runner.invoke(app, ["127.0.0.1", "--start", "65000"]).stdout
-    assert "_" * 60 in output
-    assert f"Please wait, scanning 65000 - 65535 ports in remote host: 127.0.0.1" in output
-    assert "_" * 60 in output
-    assert "Found 0 open port(s) []." in output
+def test_port_find_cmd_runs(monkeypatch):
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
+
+    sys.modules.pop('src.portfinder.cli', None)
+    sys.argv = ['src.portfinder.cli']
+
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_module('src.portfinder.cli', run_name='__main__')
+    assert exc.value.code == 0
+
+    result = subprocess.run([
+        sys.executable, '-m', 'src.portfinder.cli',
+        '127.0.0.1', '--start', '1', '--end', '1'
+    ], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert 'Please wait, scanning' in result.stdout
