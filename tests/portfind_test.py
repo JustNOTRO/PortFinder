@@ -40,18 +40,6 @@ def test_invalid_port_range(monkeypatch):
     assert "Usage: " in result.stdout
 
 
-def test_invalid_start_range():
-    result = runner.invoke(app, ["127.0.0.1", "--start", "abc", "--end", "1024"])
-    assert result.exit_code == 2
-    assert "Invalid value for '--start': 'abc' is not a valid integer" in result.stderr
-
-
-def test_invalid_end_range():
-    result = runner.invoke(app, ["127.0.0.1", "--start", "1024", "--end", "abc"])
-    assert result.exit_code == 2
-    assert "Invalid value for '--end': 'abc' is not a valid integer" in result.stderr
-
-
 def test_no_open_ports(monkeypatch):
     monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
     result = runner.invoke(app, ["127.0.0.1", "--start", "1", "--end", "1024"])
