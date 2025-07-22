@@ -1,23 +1,23 @@
+import sys
 import typer
 import ipaddress
 import socket
 
 from typing import Optional
-from typing_extensions import Annotated
 from concurrent.futures import ThreadPoolExecutor
 
+LOCAL_HOST_ADDRESS = "127.0.0.1"
 LOWEST_PORT = 0
 HIGHEST_PORT = 65_535
 
+
 def scan_port(ip, port):
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(0.1)
-        result = sock.connect_ex((ip, port))
-        sock.close()
-        return port if result == 0 else None
-    except socket.error:
-        return None
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(0.1)
+    result = sock.connect_ex((ip, port))
+    sock.close()
+    return port if result == 0 else None
+
 
 def is_ip_address(ip_str):
     try:
@@ -28,21 +28,26 @@ def is_ip_address(ip_str):
 
 
 def port_find(
-    address: Optional[str] = typer.Argument(
-        None,
-        help="IP address to scan for open ports."
-    ),
-    start: int = typer.Option(0, "--start", help="Starting port range."),
-    end:   int = typer.Option(65_535, "--end",   help="Ending port range."),
+        address: Optional[str] = typer.Argument(
+            None,
+            help="IP address to scan for open ports."
+        ),
+        start: int = typer.Option(LOWEST_PORT, "--start", help="Starting port range."),
+        end: int = typer.Option(HIGHEST_PORT, "--end", help="Ending port range."),
 ):
+    from .cli import app
     if address is None:
-        from .cli import app
         app(["--help"])
-        typer.Exit(1)
+
+    if address == "localhost":
+        address = LOCAL_HOST_ADDRESS
 
     if not is_ip_address(address):
         print(f"Invalid IP address '{address}'.")
-        typer.Exit(1)
+        sys.exit(1)
+
+    if start > end:
+        app(["--help"])
 
     print("_" * 60)
     print(f"Please wait, scanning {start} - {end} ports in remote host: {address}")
