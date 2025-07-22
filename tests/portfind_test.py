@@ -2,6 +2,7 @@ import sys
 import subprocess
 import runpy
 import pytest
+
 from typer.testing import CliRunner
 from src.portfinder.cli import app
 from src.portfinder.portfind import scan_port
@@ -34,19 +35,20 @@ def test_invalid_address():
 
 
 def test_invalid_port_range(monkeypatch):
-    output = runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"]).stdout
-    assert "Usage:" in output
+    result = runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"])
+    assert result.exit_code == 0
+    assert "Usage: " in result.stdout
 
 
 def test_invalid_start_range():
     result = runner.invoke(app, ["127.0.0.1", "--start", "abc", "--end", "1024"])
-    assert result.exit_code != 0
+    assert result.exit_code == 2
     assert "Invalid value for '--start': 'abc' is not a valid integer" in result.stdout
 
 
 def test_invalid_end_range():
     result = runner.invoke(app, ["127.0.0.1", "--start", "1024", "--end", "abc"])
-    assert result.exit_code != 0
+    assert result.exit_code == 2
     assert "Invalid value for '--end': 'abc' is not a valid integer" in result.stdout
 
 
@@ -56,13 +58,11 @@ def test_no_open_ports(monkeypatch):
     assert result.exit_code == 0
     assert "_" * 60 in result.stdout
     assert "Please wait, scanning 1 - 1024 ports in remote host: 127.0.0.1" in result.stdout
-    assert "_" * 60 in result.stdout
     assert "Found 0 open port(s) []" in result.stdout
 
 
 def test_port_find_cmd_runs(monkeypatch):
     monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
-
     sys.modules.pop('src.portfinder.cli', None)
     sys.argv = ['src.portfinder.cli']
 
