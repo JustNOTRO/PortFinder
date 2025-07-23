@@ -6,12 +6,13 @@ import pytest
 from typer.testing import CliRunner
 from src.portfinder.cli import app
 from src.portfinder.portfind import scan_port
+from .portfind_test import no_open_ports_mock
 
 test_runner = CliRunner()
 
 
 def test_custom_address(monkeypatch):
-    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', no_open_ports_mock)
     result = test_runner.invoke(app, ["127.0.0.2", "--start", "1", "--end", "1024"])
     assert result.exit_code == 0
     assert "Please wait, scanning 1 - 1024 ports in remote host: 127.0.0.2" in result.stdout

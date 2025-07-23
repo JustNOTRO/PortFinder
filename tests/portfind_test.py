@@ -16,8 +16,14 @@ def test_port_find_no_args():
     assert "Usage:" in result.stdout
 
 
+async def async_port_mock(ip, port):
+    return port if port == 5000 else None
+
+async def no_open_ports_mock(ip, port):
+    return None
+
 def test_port_find_localhost(monkeypatch):
-    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: port if port == 5000 else None)
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
 
     result = runner.invoke(app, ["localhost", "--start", "1024", "--end", "5000"])
     assert result.exit_code == 0
@@ -41,7 +47,7 @@ def test_invalid_port_range(monkeypatch):
 
 
 def test_no_open_ports(monkeypatch):
-    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', no_open_ports_mock)
     result = runner.invoke(app, ["127.0.0.1", "--start", "1", "--end", "1024"])
     assert result.exit_code == 0
     assert "_" * 60 in result.stdout
@@ -50,7 +56,7 @@ def test_no_open_ports(monkeypatch):
 
 
 def test_port_find_cmd_runs(monkeypatch):
-    monkeypatch.setattr(scan_port.__module__ + '.scan_port', lambda ip, port: None)
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
     sys.modules.pop('src.portfinder.cli', None)
     sys.argv = ['src.portfinder.cli']
 
