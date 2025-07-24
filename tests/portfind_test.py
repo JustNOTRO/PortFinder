@@ -1,3 +1,4 @@
+import socket
 import sys
 import subprocess
 import runpy
@@ -72,6 +73,7 @@ def test_port_find_cmd_runs(monkeypatch):
 
 def test_port_find_with_domain_provided(monkeypatch):
     monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
+    monkeypatch.setattr(socket, 'gethostbyname', lambda x: '74.6.231.21')
 
     result = runner.invoke(app, ["yahoo.com", "--start", "1024", "--end", "5000"])
     assert result.exit_code == 0
