@@ -36,13 +36,13 @@ def test_port_find_localhost(monkeypatch):
 def test_invalid_address():
     result = runner.invoke(app, ["abcdef", "--start", "1", "--end", "1024"])
     assert result.exit_code == 2
-    assert "Invalid IP address 'abcdef'." in result.stdout
+    assert "Invalid IP address 'abcdef'." in result.output
 
 
 def test_invalid_port_range(monkeypatch):
     result = runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"])
     assert result.exit_code == 2
-    assert "Invalid value: start port cannot be greater than end port. " in result.stdout
+    assert "Invalid value: start port cannot be greater than end port. " in result.output
 
 
 def test_no_open_ports(monkeypatch):
