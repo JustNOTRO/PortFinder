@@ -17,7 +17,7 @@ runner = CliRunner()
 
 def test_port_find_no_args():
     result = runner.invoke(app, [])
-    assert result.exit_code == 0
+    assert result.exit_code == 2
     assert "Usage:" in result.stdout
 
 
@@ -35,14 +35,14 @@ def test_port_find_localhost(monkeypatch):
 
 def test_invalid_address():
     result = runner.invoke(app, ["abcdef", "--start", "1", "--end", "1024"])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "Invalid IP address 'abcdef'." in result.stdout
 
 
 def test_invalid_port_range(monkeypatch):
     result = runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"])
-    assert result.exit_code == 0
-    assert "Usage: " in result.stdout
+    assert result.exit_code == 2
+    assert "Invalid value: start port cannot be greater than end port. " in result.stdout
 
 
 def test_no_open_ports(monkeypatch):
@@ -61,7 +61,7 @@ def test_port_find_cmd_runs(monkeypatch):
 
     with pytest.raises(SystemExit) as exc:
         runpy.run_module('src.portfinder.cli', run_name='__main__')
-    assert exc.value.code == 0
+    assert exc.value.code == 2
 
     result = subprocess.run([
         sys.executable, '-m', 'src.portfinder.cli',

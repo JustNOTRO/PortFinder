@@ -20,14 +20,14 @@ def test_cmd_runs():
 
         with pytest.raises(SystemExit) as exc:
             runpy.run_module("src.portfinder.__main__", run_name="__main__")
-        assert exc.value.code == 0
+        assert exc.value.code == 2
 
         result = subprocess.run(
             [sys.executable, "-m", "src.portfinder.cli"],
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0
-        assert "Usage:" in result.stdout
+        assert result.returncode == 2
+        assert "Usage:" in result.stderr
     finally:
         sys.argv = original_argv
