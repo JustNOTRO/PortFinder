@@ -5,38 +5,47 @@ import pytest
 
 from typer.testing import CliRunner
 from src.portfinder.cli import app
+from .fake_methods import no_open_ports_mock
+
+test_runner = CliRunner()
 
 
-runner = CliRunner()
-
-
-def test_default_address():
-    result = runner.invoke(app)
+def test_custom_address(monkeypatch):
+    from src.portfinder import portfind
+    monkeypatch.setattr(portfind, 'scan_port', no_open_ports_mock)
+    result = test_runner.invoke(app, ["127.0.0.2", "--start", "1", "--end", "1024"])
     assert result.exit_code == 0
-    assert "Checking address: 127.0.0.1" in result.output
+    assert "Please wait, scanning 1 - 1024 ports in remote host: 127.0.0.2" in result.stdout
+    assert "Found 0 open port(s) []" in result.stdout
 
 
-def test_custom_address():
-    result = runner.invoke(app, ["127.0.0.2"])
-    assert result.exit_code == 0
-    assert "Checking address: 127.0.0.2" in result.output
+def test_invalid_address():
+    result = test_runner.invoke(app, ["abcdef"])
+    assert result.exit_code == 2
+    assert "Invalid IP address 'abcdef'." in result.output
+
+
+def test_no_address_shows():
+    result = test_runner.invoke(app, [])
+    assert result.exit_code == 2
+    assert "IP address is required." in result.output
+
 
 def test_cmd_runs():
     original_argv = sys.argv.copy()
     try:
-        sys.argv = ["src.portfinder"]
+        sys.argv = ["src.portfinder.cli"]
 
         with pytest.raises(SystemExit) as exc:
-            runpy.run_module("src.portfinder.__main__", run_name="__main__")
-
-        assert exc.value.code == 0
+            runpy.run_module("src.portfinder.cli", run_name="__main__")
+        assert exc.value.code == 2
 
         result = subprocess.run(
             [sys.executable, "-m", "src.portfinder.cli"],
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0
-        assert "Checking address" in result.stdout
+        assert result.returncode == 2
+        assert "Usage:" in result.stderr
     finally:
         sys.argv = original_argv

@@ -1,9 +1,10 @@
 name: Python CI
 
 on:
-  pull_request:
+  push:
     branches:
       - "**"
+  merge_group:
 
 jobs:
   test:
@@ -17,6 +18,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Start HTTP server on port 5000
+        run: |
+          nohup python3 -m http.server 5000 & # (THIS IS FOR TEST PURPOSES ONLY)
+          sleep 2  # Give it time to start
+
 
       - name: Install & run tests in virtualenv
         run: |
