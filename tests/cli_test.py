@@ -25,10 +25,10 @@ def test_invalid_address():
     assert "Invalid IP address 'abcdef'." in result.stdout
 
 
-def test_no_address_shows_help_and_exits():
+def test_no_address_shows():
     result = test_runner.invoke(app, [])
     assert result.exit_code == 2
-    assert "Usage:" in result.stdout
+    assert "IP address is required." in result.stdout
 
 
 def test_cmd_runs():
