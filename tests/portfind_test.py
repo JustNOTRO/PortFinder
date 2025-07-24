@@ -18,7 +18,7 @@ runner = CliRunner()
 def test_port_find_no_args():
     result = runner.invoke(app, [])
     assert result.exit_code == 2
-    assert "Usage:" in result.stdout
+    assert "Usage:" in result.output
 
 
 def test_port_find_localhost(monkeypatch):

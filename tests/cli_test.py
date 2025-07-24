@@ -22,13 +22,13 @@ def test_custom_address(monkeypatch):
 def test_invalid_address():
     result = test_runner.invoke(app, ["abcdef"])
     assert result.exit_code == 2
-    assert "Invalid IP address 'abcdef'." in result.stdout
+    assert "Invalid IP address 'abcdef'." in result.output
 
 
 def test_no_address_shows():
     result = test_runner.invoke(app, [])
     assert result.exit_code == 2
-    assert "IP address is required." in result.stdout
+    assert "IP address is required." in result.output
 
 
 def test_cmd_runs():
