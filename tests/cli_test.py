@@ -6,7 +6,7 @@ import pytest
 from typer.testing import CliRunner
 from src.portfinder.cli import app
 from src.portfinder.portfind import scan_port
-from .portfind_test import no_open_ports_mock
+from .fake_methods import no_open_ports_mock
 
 test_runner = CliRunner()
 

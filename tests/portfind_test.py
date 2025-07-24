@@ -3,9 +3,13 @@ import subprocess
 import runpy
 import pytest
 
+
+from .fake_methods import async_port_mock
+from .fake_methods import no_open_ports_mock
+
 from typer.testing import CliRunner
 from src.portfinder.cli import app
-from src.portfinder.portfind import scan_port
+from src.portfinder.portfind import scan_port, DEFAULT_TIMEOUT
 
 runner = CliRunner()
 
@@ -15,12 +19,6 @@ def test_port_find_no_args():
     assert result.exit_code == 0
     assert "Usage:" in result.stdout
 
-
-async def async_port_mock(ip, port):
-    return port if port == 5000 else None
-
-async def no_open_ports_mock(ip, port):
-    return None
 
 def test_port_find_localhost(monkeypatch):
     monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
@@ -70,3 +68,13 @@ def test_port_find_cmd_runs(monkeypatch):
     ], capture_output=True, text=True)
     assert result.returncode == 0
     assert 'Please wait, scanning' in result.stdout
+
+@pytest.mark.asyncio
+async def test_scan_port():
+    result = await scan_port("127.0.0.1", 5000, DEFAULT_TIMEOUT)
+    assert result is 5000
+
+@pytest.mark.asyncio
+async def test_scan_port_returns_none():
+    result = await scan_port("127.0.0.1", 1, DEFAULT_TIMEOUT)
+    assert result is None
