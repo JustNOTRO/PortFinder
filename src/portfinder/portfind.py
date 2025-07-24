@@ -1,4 +1,3 @@
-import sys
 import typer
 import ipaddress
 import asyncio
@@ -39,24 +38,22 @@ def port_find(address: Optional[str] = typer.Argument(None, help="IP address to 
                                       max=HIGHEST_PORT),
               timeout: float = typer.Option(DEFAULT_TIMEOUT, "--timeout", help="Timeout for each port scan.")
               ):
+    if address is None:
+        raise typer.BadParameter("IP address is required.")
+
+    if address == "localhost":
+        address = LOCAL_HOST_ADDRESS
+
+    if not is_ip_address(address):
+        raise typer.BadParameter(f"Invalid IP address '{address}'.")
+
+    if start > end:
+        raise typer.BadParameter("start port cannot be greater than end port.")
+
     asyncio.run(async_port_find(address, start, end, timeout))
 
 
 async def async_port_find(address, start, end, timeout):
-    from .cli import app
-
-    if address is None:
-        app(["--help"])
-    elif address == "localhost":
-        address = LOCAL_HOST_ADDRESS
-
-    if not is_ip_address(address):
-        print(f"Invalid IP address '{address}'.")
-        sys.exit(1)
-
-    if start > end:
-        app(["--help"])
-
     print("_" * 63)
     print(f"Please wait, scanning {start} - {end} ports in remote host: {address}")
     print("_" * 63)
