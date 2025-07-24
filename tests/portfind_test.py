@@ -1,3 +1,4 @@
+import socket
 import sys
 import subprocess
 import runpy
@@ -69,6 +70,18 @@ def test_port_find_cmd_runs(monkeypatch):
     assert result.returncode == 0
     assert 'Please wait, scanning' in result.stdout
 
+
+def test_port_find_with_domain_provided(monkeypatch):
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
+    monkeypatch.setattr(socket, 'gethostbyname', lambda x: '74.6.231.21')
+
+    result = runner.invoke(app, ["yahoo.com", "--start", "1024", "--end", "5000"])
+    assert result.exit_code == 0
+    assert "_" * 60 in result.stdout
+    assert "Please wait, scanning 1024 - 5000 ports in remote host: 74.6.231.21" in result.stdout
+    assert "_" * 60 in result.stdout
+    assert "74.6.231.21 -> port 5000 is open!" in result.stdout
+    assert "Found 1 open port(s) [5000]." in result.stdout
 
 @pytest.mark.asyncio
 async def test_scan_port(monkeypatch):
