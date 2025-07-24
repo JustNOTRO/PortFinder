@@ -1,9 +1,9 @@
 import typer
 import ipaddress
 import asyncio
+import socket
 
 from typing import Optional
-from socket import gethostbyname
 
 LOCAL_HOST_ADDRESS = "127.0.0.1"
 LOWEST_PORT = 0
@@ -31,6 +31,7 @@ def is_ip_address(ip_str):
     except ValueError:
         return False
 
+
 def port_find(address: Optional[str] = typer.Argument(None, help="IP address to scan for open ports."),
               start: int = typer.Option(LOWEST_PORT, "--start", help="Starting port range.", min=LOWEST_PORT,
                                         max=HIGHEST_PORT),
@@ -47,11 +48,13 @@ async def async_port_find(address, start, end, timeout):
 
     if address == "localhost":
         address = LOCAL_HOST_ADDRESS
-    else:
-        address = gethostbyname(address)
+
 
     if not is_ip_address(address):
-        raise typer.BadParameter(f"Invalid IP address '{address}'.")
+        try:
+            address = socket.gethostbyname(address)
+        except socket.gaierror:
+            raise typer.BadParameter(f"Invalid IP address '{address}'.")
 
     if start > end:
         raise typer.BadParameter("start port cannot be greater than end port.")
