@@ -72,13 +72,11 @@ def test_port_find_cmd_runs(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_scan_port(monkeypatch):
-    monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
     result = await scan_port("127.0.0.1", 5000, DEFAULT_TIMEOUT)
     assert result is 5000
 
 
 @pytest.mark.asyncio
 async def test_scan_port_returns_none(monkeypatch):
-    monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
     result = await scan_port("127.0.0.1", 1, DEFAULT_TIMEOUT)
     assert result is None
