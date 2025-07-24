@@ -31,7 +31,7 @@ def is_ip_address(ip_str):
     except ValueError:
         return False
 
-def resolve_domain(domain):
+def try_resolve_domain(domain):
     try:
         return socket.gethostbyname(domain)
     except socket.gaierror:
@@ -56,7 +56,7 @@ async def async_port_find(address, start, end, timeout):
 
 
     if not is_ip_address(address):
-        address = resolve_domain(address)
+        address = try_resolve_domain(address)
 
     if start > end:
         raise typer.BadParameter("start port cannot be greater than end port.")
