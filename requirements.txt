@@ -1,4 +1,4 @@
 typer>=0.16.0
 pytest>=8.4.1
 pytest-cov>=6.2.1
-pytest-asyncio>=1.10
+pytest-asyncio>=1.1.0

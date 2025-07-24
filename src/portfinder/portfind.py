@@ -58,7 +58,7 @@ async def async_port_find(address, start, end, timeout):
         app(["--help"])
 
     print("_" * 63)
-    print(f"Please wait, scanning {start} - {end} ports in remote host: {address}")
+    print(f"Please wait, scanning {start:,} - {end:,} ports in remote host: {address}")
     print("_" * 63)
 
     semaphore = asyncio.Semaphore(100)
@@ -76,6 +76,6 @@ async def async_port_find(address, start, end, timeout):
             continue
 
         open_ports.append(port)
-        print(f"{address} -> port {port} is open!")
+        print(f"{address} -> port {port:,} is open!")
 
-    print(f"Found {format(len(open_ports))} open port(s) {open_ports}.")
+    print(f"Found {len(open_ports):,} open port(s) {open_ports}.")
