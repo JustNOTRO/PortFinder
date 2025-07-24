@@ -19,11 +19,11 @@ def test_cmd_runs():
         sys.argv = ["src.portfinder.cli"]
 
         with pytest.raises(SystemExit) as exc:
-            runpy.run_module("src.portfinder.cli", run_name="__main__")
+            runpy.run_module("src.portfinder.__main__", run_name="__main__")
         assert exc.value.code == 2
 
         result = subprocess.run(
-            [sys.executable, "-m", "src.portfinder.cli"],
+            [sys.executable, "-m", "src.portfinder.__main__"],
             capture_output=True,
             text=True,
         )
