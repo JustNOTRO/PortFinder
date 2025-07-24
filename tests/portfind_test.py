@@ -41,7 +41,7 @@ def test_invalid_address():
 def test_invalid_port_range(monkeypatch):
     result = runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"])
     assert result.exit_code == 2
-    assert "start port cannot be greater than end port." in result.stdout
+    assert "start port cannot be greater than end port." in result.output
 
 
 def test_no_open_ports(monkeypatch):
