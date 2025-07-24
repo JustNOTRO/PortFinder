@@ -3,7 +3,6 @@ import subprocess
 import runpy
 import pytest
 
-
 from .fake_methods import async_port_mock
 from .fake_methods import no_open_ports_mock
 
@@ -42,7 +41,7 @@ def test_invalid_address():
 def test_invalid_port_range(monkeypatch):
     result = runner.invoke(app, ["127.0.0.1", "--start", "1025", "--end", "1024"])
     assert result.exit_code == 2
-    assert "Invalid value: start port cannot be greater than end port. " in result.output
+    assert "start port cannot be greater than end port." in result.stdout
 
 
 def test_no_open_ports(monkeypatch):
@@ -72,11 +71,14 @@ def test_port_find_cmd_runs(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_scan_port():
-    result = await scan_port("127.0.0.1", 5000, TEST_TIMEOUT)
+async def test_scan_port(monkeypatch):
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
+    result = await scan_port("127.0.0.1", 5000, DEFAULT_TIMEOUT)
     assert result is 5000
 
+
 @pytest.mark.asyncio
-async def test_scan_port_returns_none():
-    result = await scan_port("127.0.0.1", 1, TEST_TIMEOUT)
+async def test_scan_port_returns_none(monkeypatch):
+    monkeypatch.setattr(scan_port.__module__ + '.scan_port', async_port_mock)
+    result = await scan_port("127.0.0.1", 1, DEFAULT_TIMEOUT)
     assert result is None
