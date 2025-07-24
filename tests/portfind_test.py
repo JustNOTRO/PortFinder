@@ -11,6 +11,7 @@ from typer.testing import CliRunner
 from src.portfinder.cli import app
 from src.portfinder.portfind import scan_port, DEFAULT_TIMEOUT
 
+TEST_TIMEOUT = 0.100
 runner = CliRunner()
 
 
@@ -69,12 +70,13 @@ def test_port_find_cmd_runs(monkeypatch):
     assert result.returncode == 0
     assert 'Please wait, scanning' in result.stdout
 
+
 @pytest.mark.asyncio
 async def test_scan_port():
-    result = await scan_port("127.0.0.1", 5000, DEFAULT_TIMEOUT)
+    result = await scan_port("127.0.0.1", 5000, TEST_TIMEOUT)
     assert result is 5000
 
 @pytest.mark.asyncio
 async def test_scan_port_returns_none():
-    result = await scan_port("127.0.0.1", 1, DEFAULT_TIMEOUT)
+    result = await scan_port("127.0.0.1", 1, TEST_TIMEOUT)
     assert result is None

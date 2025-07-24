@@ -6,7 +6,6 @@ on:
       - "**"
   merge_group:
 
-
 jobs:
   test:
     runs-on: ubuntu-latest
