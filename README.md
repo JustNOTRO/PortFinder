@@ -1,3 +1,5 @@
+A python cli command for simply scanning open ports that sits on TCP/UDP
+
 ⚠️ Disclaimer
 
 This tool is intended **only for educational purposes and authorized testing**. 
