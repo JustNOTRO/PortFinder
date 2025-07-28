@@ -39,9 +39,9 @@ class DatagramScanProtocol(asyncio.DatagramProtocol):
 
 async def scan_port(ip, port, timeout):
     try:
-        return await scan_udp_port(ip, port, timeout)
+        return await scan_tcp_port(ip, port, timeout)
     except (asyncio.TimeoutError, OSError):
-        return None
+        return await scan_udp_port(ip, port, timeout)
 
 
 async def scan_tcp_port(ip, port, timeout):
