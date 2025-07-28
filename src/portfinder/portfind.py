@@ -33,6 +33,9 @@ class DatagramScanProtocol(asyncio.DatagramProtocol):
         self.transport = transport
         self.transport.sendto(PING_REQUEST.encode(), (self.ip, self.port))
 
+    def connection_lost(self, exc):
+        pass
+
 
 async def scan_port(ip, port, timeout):
     try:
@@ -53,20 +56,21 @@ async def scan_tcp_port(ip, port, timeout):
 
 
 async def scan_udp_port(ip, port, timeout):
+    loop = asyncio.get_running_loop()
+    scan_finished = loop.create_future()
+
+    transport, _ = await loop.create_datagram_endpoint(
+        lambda: DatagramScanProtocol(ip, port, scan_finished),
+        local_addr=("0.0.0.0", 0)
+    )
+
     try:
-        loop = asyncio.get_running_loop()
-        scan_finished = loop.create_future()
-
-        transport, _ = await loop.create_datagram_endpoint(
-            lambda: DatagramScanProtocol(ip, port, scan_finished),
-            remote_addr=(ip, port)
-        )
-
         await asyncio.wait_for(scan_finished, timeout)
-        transport.close()
         return port
     except (asyncio.TimeoutError, OSError):
         return None
+    finally:
+        transport.close()
 
 
 def is_ip_address(ip_str):
